@@ -1,0 +1,227 @@
+-- Load Spawner
+local Spawner = loadstring(game:HttpGet("https://raw.githubusercontent.com/ataturk123/GardenSpawner/refs/heads/main/Spawner.lua"))()
+local pets = Spawner.GetPets()
+local seeds = Spawner.GetSeeds()
+local eggs = {"Night Egg", "Day Egg", "Sunshine Egg"}
+
+local UserInputService = game:GetService("UserInputService")
+local CoreGui = game:GetService("CoreGui")
+
+-- Cleanup old UI
+if CoreGui:FindFirstChild("CustomSpawnerGUI") then
+    CoreGui.CustomSpawnerGUI:Destroy()
+end
+
+-- Main UI
+local gui = Instance.new("ScreenGui", CoreGui)
+gui.Name = "CustomSpawnerGUI"
+gui.ResetOnSpawn = false
+gui.IgnoreGuiInset = true
+
+-- Main Frame (Draggable)
+local mainFrame = Instance.new("Frame", gui)
+mainFrame.Size = UDim2.new(0, 400, 0, 300)
+mainFrame.Position = UDim2.new(0.5, -200, 0.5, -150)
+mainFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+mainFrame.BorderSizePixel = 0
+mainFrame.Active = true
+mainFrame.Draggable = true
+
+local gradient = Instance.new("UIGradient", mainFrame)
+gradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(60, 60, 60)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(25, 25, 25))
+}
+gradient.Rotation = 45
+
+Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 10)
+
+-- Title
+local title = Instance.new("TextLabel", mainFrame)
+title.Size = UDim2.new(1, -60, 0, 40)
+title.Position = UDim2.new(0, 10, 0, 0)
+title.Text = "🧪 Primo Spawner"
+title.TextColor3 = Color3.new(1, 1, 1)
+title.TextSize = 26
+title.Font = Enum.Font.FredokaOne
+title.BackgroundTransparency = 1
+title.TextXAlignment = Enum.TextXAlignment.Left
+
+-- Minimize & Close
+local closeBtn = Instance.new("TextButton", mainFrame)
+closeBtn.Size = UDim2.new(0, 25, 0, 25)
+closeBtn.Position = UDim2.new(1, -30, 0, 7)
+closeBtn.Text = "✕"
+closeBtn.TextColor3 = Color3.new(1, 1, 1)
+closeBtn.Font = Enum.Font.FredokaOne
+closeBtn.TextSize = 16
+closeBtn.BackgroundColor3 = Color3.fromRGB(120, 30, 30)
+closeBtn.BorderSizePixel = 0
+Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(1, 0)
+
+local minimizeBtn = closeBtn:Clone()
+minimizeBtn.Text = "_"
+minimizeBtn.Position = UDim2.new(1, -60, 0, 7)
+minimizeBtn.Parent = mainFrame
+
+-- Pages
+local pages = {}
+local function showPage(name)
+    for _, p in pairs(pages) do p.Visible = false end
+    if pages[name] then pages[name].Visible = true end
+end
+
+-- Navigation
+local navFrame = Instance.new("Frame", mainFrame)
+navFrame.Size = UDim2.new(0, 120, 0, 240)
+navFrame.Position = UDim2.new(0, 10, 0, 50)
+navFrame.BackgroundTransparency = 1
+
+local contentFrame = Instance.new("Frame", mainFrame)
+contentFrame.Size = UDim2.new(1, -140, 1, -70)
+contentFrame.Position = UDim2.new(0, 130, 0, 50)
+contentFrame.BackgroundTransparency = 1
+
+-- Button factory
+local function createNavButton(text, y, pageName)
+    local btn = Instance.new("TextButton", navFrame)
+    btn.Size = UDim2.new(1, 0, 0, 40)
+    btn.Position = UDim2.new(0, 0, 0, y)
+    btn.Text = text
+    btn.Font = Enum.Font.FredokaOne
+    btn.TextColor3 = Color3.new(1, 1, 1)
+    btn.TextSize = 20
+    btn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+    btn.BorderSizePixel = 0
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+    btn.MouseButton1Click:Connect(function()
+        showPage(pageName)
+    end)
+end
+
+-- Input factory
+local function createInput(parent, placeholder, pos)
+    local box = Instance.new("TextBox", parent)
+    box.Size = UDim2.new(1, -20, 0, 35)
+    box.Position = pos
+    box.PlaceholderText = placeholder
+    box.Text = ""
+    box.TextColor3 = Color3.new(1, 1, 1)
+    box.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    box.Font = Enum.Font.FredokaOne
+    box.TextSize = 18
+    box.ClearTextOnFocus = false
+    Instance.new("UICorner", box).CornerRadius = UDim.new(0, 6)
+    return box
+end
+
+-- Pet Page
+do
+    local page = Instance.new("Frame", contentFrame)
+    page.Size = UDim2.new(1, 0, 1, 0)
+    page.BackgroundTransparency = 1
+    pages.Pet = page
+
+    local nameBox = createInput(page, "Pet Name", UDim2.new(0, 10, 0, 10))
+    local kgBox = createInput(page, "KG", UDim2.new(0, 10, 0, 55))
+    local ageBox = createInput(page, "Age", UDim2.new(0, 10, 0, 100))
+
+    local spawnBtn = Instance.new("TextButton", page)
+    spawnBtn.Size = UDim2.new(1, -20, 0, 40)
+    spawnBtn.Position = UDim2.new(0, 10, 0, 150)
+    spawnBtn.Text = "Spawn Pet"
+    spawnBtn.TextColor3 = Color3.new(1, 1, 1)
+    spawnBtn.BackgroundColor3 = Color3.fromRGB(80, 160, 80)
+    spawnBtn.Font = Enum.Font.FredokaOne
+    spawnBtn.TextSize = 20
+    Instance.new("UICorner", spawnBtn).CornerRadius = UDim.new(0, 6)
+
+    spawnBtn.MouseButton1Click:Connect(function()
+        local name, kg, age = nameBox.Text, tonumber(kgBox.Text), tonumber(ageBox.Text)
+        if name and kg and age then
+            Spawner.SpawnPet(name, kg, age)
+        end
+    end)
+end
+
+-- Seed Page
+do
+    local page = Instance.new("Frame", contentFrame)
+    page.Size = UDim2.new(1, 0, 1, 0)
+    page.BackgroundTransparency = 1
+    pages.Seed = page
+
+    local seedBox = createInput(page, "Seed Name", UDim2.new(0, 10, 0, 10))
+    local spawnBtn = Instance.new("TextButton", page)
+    spawnBtn.Size = UDim2.new(1, -20, 0, 40)
+    spawnBtn.Position = UDim2.new(0, 10, 0, 60)
+    spawnBtn.Text = "Spawn Seed"
+    spawnBtn.TextColor3 = Color3.new(1, 1, 1)
+    spawnBtn.BackgroundColor3 = Color3.fromRGB(80, 160, 80)
+    spawnBtn.Font = Enum.Font.FredokaOne
+    spawnBtn.TextSize = 20
+    Instance.new("UICorner", spawnBtn).CornerRadius = UDim.new(0, 6)
+
+    spawnBtn.MouseButton1Click:Connect(function()
+        local seed = seedBox.Text
+        if seed and seed ~= "" then
+            Spawner.SpawnSeed(seed)
+        end
+    end)
+end
+
+-- Egg Page
+do
+    local page = Instance.new("Frame", contentFrame)
+    page.Size = UDim2.new(1, 0, 1, 0)
+    page.BackgroundTransparency = 1
+    pages.Egg = page
+
+    local eggBox = createInput(page, "Egg Name", UDim2.new(0, 10, 0, 10))
+    local spawnBtn = Instance.new("TextButton", page)
+    spawnBtn.Size = UDim2.new(1, -20, 0, 40)
+    spawnBtn.Position = UDim2.new(0, 10, 0, 60)
+    spawnBtn.Text = "Spawn Egg"
+    spawnBtn.TextColor3 = Color3.new(1, 1, 1)
+    spawnBtn.BackgroundColor3 = Color3.fromRGB(80, 160, 80)
+    spawnBtn.Font = Enum.Font.FredokaOne
+    spawnBtn.TextSize = 20
+    Instance.new("UICorner", spawnBtn).CornerRadius = UDim.new(0, 6)
+
+    spawnBtn.MouseButton1Click:Connect(function()
+        local egg = eggBox.Text
+        if egg and egg ~= "" then
+            Spawner.SpawnEgg(egg)
+        end
+    end)
+end
+
+-- Navigation Buttons
+createNavButton("🐾 Pet Spawner", 0, "Pet")
+createNavButton("🌱 Seed Spawner", 50, "Seed")
+createNavButton("🥚 Egg Spawner", 100, "Egg")
+
+-- Default Page
+showPage("Pet")
+
+-- Close/Minimize logic
+closeBtn.MouseButton1Click:Connect(function()
+    gui:Destroy()
+end)
+
+minimizeBtn.MouseButton1Click:Connect(function()
+    mainFrame.Visible = false
+    local restoreBtn = Instance.new("TextButton", gui)
+    restoreBtn.Size = UDim2.new(0, 120, 0, 30)
+    restoreBtn.Position = UDim2.new(0.5, -60, 0, 10)
+    restoreBtn.Text = "📦 Reopen Spawner"
+    restoreBtn.Font = Enum.Font.FredokaOne
+    restoreBtn.TextColor3 = Color3.new(1, 1, 1)
+    restoreBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    Instance.new("UICorner", restoreBtn).CornerRadius = UDim.new(0, 6)
+
+    restoreBtn.MouseButton1Click:Connect(function()
+        mainFrame.Visible = true
+        restoreBtn:Destroy()
+    end)
+end)
