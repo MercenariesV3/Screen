@@ -1,0 +1,147 @@
+-- Load the Spawner
+local Spawner = loadstring(game:HttpGet("https://raw.githubusercontent.com/ataturk123/GardenSpawner/refs/heads/main/Spawner.lua"))()
+
+Spawner.Load() -- Preloads data (optional)
+task.wait(1) -- Ensure data is fetched
+
+-- Setup UI
+local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+ScreenGui.Name = "CustomSpawnerUI"
+ScreenGui.ResetOnSpawn = false
+
+-- Basic UI Theme
+local function createFrame(name, size, pos, parent)
+	local frame = Instance.new("Frame")
+	frame.Name = name
+	frame.Size = size
+	frame.Position = pos
+	frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+	frame.BorderSizePixel = 0
+	frame.BackgroundTransparency = 0.1
+	frame.Parent = parent
+	return frame
+end
+
+local function createButton(text, pos, parent)
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(0, 160, 0, 40)
+	btn.Position = pos
+	btn.Text = text
+	btn.Font = Enum.Font.FredokaOne
+	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	btn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+	btn.BorderSizePixel = 0
+	btn.AutoButtonColor = true
+	btn.Parent = parent
+	return btn
+end
+
+local function createDropdown(items, parent)
+	local dropdown = Instance.new("TextBox")
+	dropdown.Size = UDim2.new(0, 200, 0, 40)
+	dropdown.PlaceholderText = "Type or Paste Name"
+	dropdown.Font = Enum.Font.SourceSans
+	dropdown.TextColor3 = Color3.fromRGB(255, 255, 255)
+	dropdown.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+	dropdown.BorderSizePixel = 0
+	dropdown.ClearTextOnFocus = false
+	dropdown.Text = ""
+	dropdown.Parent = parent
+	return dropdown
+end
+
+-- Main Menu
+local mainMenu = createFrame("MainMenu", UDim2.new(0, 220, 0, 180), UDim2.new(0.5, -110, 0.5, -90), ScreenGui)
+
+local petBtn = createButton("Pet Spawner", UDim2.new(0, 30, 0, 20), mainMenu)
+local seedBtn = createButton("Seed Spawner", UDim2.new(0, 30, 0, 70), mainMenu)
+local eggBtn = createButton("Egg Spawner", UDim2.new(0, 30, 0, 120), mainMenu)
+
+-- Pet Page
+local petPage = createFrame("PetPage", UDim2.new(0, 300, 0, 220), UDim2.new(0.5, -150, 0.5, -110), ScreenGui)
+petPage.Visible = false
+
+local petNameBox = createDropdown(Spawner.GetPets(), petPage)
+petNameBox.Position = UDim2.new(0, 50, 0, 20)
+
+local kgBox = Instance.new("TextBox", petPage)
+kgBox.Size = UDim2.new(0, 100, 0, 30)
+kgBox.Position = UDim2.new(0, 50, 0, 70)
+kgBox.PlaceholderText = "KG"
+kgBox.Text = ""
+kgBox.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+kgBox.TextColor3 = Color3.new(1, 1, 1)
+
+local ageBox = Instance.new("TextBox", petPage)
+ageBox.Size = UDim2.new(0, 100, 0, 30)
+ageBox.Position = UDim2.new(0, 160, 0, 70)
+ageBox.PlaceholderText = "Age"
+ageBox.Text = ""
+ageBox.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+ageBox.TextColor3 = Color3.new(1, 1, 1)
+
+local petSpawnBtn = createButton("Spawn Pet", UDim2.new(0, 50, 0, 120), petPage)
+
+-- Seed Page
+local seedPage = createFrame("SeedPage", UDim2.new(0, 300, 0, 150), UDim2.new(0.5, -150, 0.5, -75), ScreenGui)
+seedPage.Visible = false
+
+local seedBox = createDropdown(Spawner.GetSeeds(), seedPage)
+seedBox.Position = UDim2.new(0, 50, 0, 20)
+
+local seedSpawnBtn = createButton("Spawn Seed", UDim2.new(0, 50, 0, 80), seedPage)
+
+-- Egg Page
+local eggPage = createFrame("EggPage", UDim2.new(0, 300, 0, 150), UDim2.new(0.5, -150, 0.5, -75), ScreenGui)
+eggPage.Visible = false
+
+local eggBox = createDropdown({"Night Egg", "Day Egg", "Sunshine Egg"}, eggPage)
+eggBox.Position = UDim2.new(0, 50, 0, 20)
+
+local eggSpawnBtn = createButton("Spawn Egg", UDim2.new(0, 50, 0, 80), eggPage)
+
+-- Navigation
+local function hideAll()
+	petPage.Visible = false
+	seedPage.Visible = false
+	eggPage.Visible = false
+end
+
+petBtn.MouseButton1Click:Connect(function()
+	hideAll()
+	petPage.Visible = true
+end)
+
+seedBtn.MouseButton1Click:Connect(function()
+	hideAll()
+	seedPage.Visible = true
+end)
+
+eggBtn.MouseButton1Click:Connect(function()
+	hideAll()
+	eggPage.Visible = true
+end)
+
+-- Functionality
+petSpawnBtn.MouseButton1Click:Connect(function()
+	local name = petNameBox.Text
+	local kg = tonumber(kgBox.Text)
+	local age = tonumber(ageBox.Text)
+	if name and kg and age then
+		Spawner.SpawnPet(name, kg, age)
+	end
+end)
+
+seedSpawnBtn.MouseButton1Click:Connect(function()
+	local seed = seedBox.Text
+	if seed and seed ~= "" then
+		Spawner.SpawnSeed(seed)
+	end
+end)
+
+eggSpawnBtn.MouseButton1Click:Connect(function()
+	local egg = eggBox.Text
+	if egg and egg ~= "" then
+		Spawner.SpawnEgg(egg)
+	end
+end)
