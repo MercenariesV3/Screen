@@ -1,0 +1,193 @@
+-- Load Spawner (WITHOUT showing default UI)
+local Spawner = loadstring(game:HttpGet("https://raw.githubusercontent.com/ataturk123/GardenSpawner/refs/heads/main/Spawner.lua"))()
+
+-- Prepare data
+local petList = Spawner.GetPets()
+local seedList = Spawner.GetSeeds()
+
+-- Setup UI
+local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+ScreenGui.Name = "CustomSpawnerUI"
+ScreenGui.ResetOnSpawn = false
+
+local function createFrame(name, size, pos, parent)
+	local frame = Instance.new("Frame")
+	frame.Name = name
+	frame.Size = size
+	frame.Position = pos
+	frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+	frame.BorderSizePixel = 0
+	frame.BackgroundTransparency = 0.05
+	frame.Parent = parent
+	return frame
+end
+
+local function createButton(text, size, pos, parent)
+	local btn = Instance.new("TextButton")
+	btn.Size = size
+	btn.Position = pos
+	btn.Text = text
+	btn.Font = Enum.Font.FredokaOne
+	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	btn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+	btn.BorderSizePixel = 0
+	btn.AutoButtonColor = true
+	btn.Parent = parent
+	return btn
+end
+
+local function createDropdown(list, parent, position)
+	local drop = Instance.new("TextButton")
+	drop.Size = UDim2.new(0, 200, 0, 40)
+	drop.Position = position
+	drop.Text = "Select..."
+	drop.Font = Enum.Font.SourceSans
+	drop.TextColor3 = Color3.new(1, 1, 1)
+	drop.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+	drop.Parent = parent
+
+	local optionsFrame = Instance.new("Frame")
+	optionsFrame.Size = UDim2.new(0, 200, 0, #list * 25)
+	optionsFrame.Position = UDim2.new(0, 0, 1, 0)
+	optionsFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+	optionsFrame.Visible = false
+	optionsFrame.ClipsDescendants = true
+	optionsFrame.Parent = drop
+
+	local selected = ""
+
+	for i, item in ipairs(list) do
+		local opt = Instance.new("TextButton")
+		opt.Size = UDim2.new(1, 0, 0, 25)
+		opt.Position = UDim2.new(0, 0, 0, (i - 1) * 25)
+		opt.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+		opt.TextColor3 = Color3.new(1, 1, 1)
+		opt.Font = Enum.Font.SourceSans
+		opt.Text = item
+		opt.Parent = optionsFrame
+
+		opt.MouseButton1Click:Connect(function()
+			drop.Text = item
+			selected = item
+			optionsFrame.Visible = false
+		end)
+	end
+
+	drop.MouseButton1Click:Connect(function()
+		optionsFrame.Visible = not optionsFrame.Visible
+	end)
+
+	return function()
+		return selected
+	end
+end
+
+-- === Main Menu ===
+local mainMenu = createFrame("MainMenu", UDim2.new(0, 240, 0, 210), UDim2.new(0.5, -120, 0.5, -105), ScreenGui)
+
+-- Minimize and Close
+local closeBtn = createButton("✕", UDim2.new(0, 25, 0, 25), UDim2.new(1, -30, 0, 5), mainMenu)
+closeBtn.BackgroundColor3 = Color3.fromRGB(120, 30, 30)
+
+local minBtn = createButton("_", UDim2.new(0, 25, 0, 25), UDim2.new(1, -60, 0, 5), mainMenu)
+minBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+
+local function hideAllPages()
+	for _, obj in pairs(ScreenGui:GetChildren()) do
+		if obj:IsA("Frame") and obj.Name:match("Page$") then
+			obj.Visible = false
+		end
+	end
+end
+
+minBtn.MouseButton1Click:Connect(function()
+	mainMenu.Visible = not mainMenu.Visible
+	hideAllPages()
+end)
+
+closeBtn.MouseButton1Click:Connect(function()
+	ScreenGui:Destroy()
+end)
+
+-- Page Buttons
+local petBtn = createButton("Pet Spawner", UDim2.new(0, 180, 0, 40), UDim2.new(0, 30, 0, 50), mainMenu)
+local seedBtn = createButton("Seed Spawner", UDim2.new(0, 180, 0, 40), UDim2.new(0, 30, 0, 100), mainMenu)
+local eggBtn = createButton("Egg Spawner", UDim2.new(0, 180, 0, 40), UDim2.new(0, 30, 0, 150), mainMenu)
+
+-- === Pet Page ===
+local petPage = createFrame("PetPage", UDim2.new(0, 320, 0, 220), UDim2.new(0.5, -160, 0.5, -110), ScreenGui)
+petPage.Visible = false
+
+local getPet = createDropdown(petList, petPage, UDim2.new(0, 60, 0, 20))
+
+local kgInput = Instance.new("TextBox", petPage)
+kgInput.Size = UDim2.new(0, 100, 0, 30)
+kgInput.Position = UDim2.new(0, 60, 0, 70)
+kgInput.PlaceholderText = "KG"
+kgInput.Text = ""
+kgInput.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+kgInput.TextColor3 = Color3.new(1, 1, 1)
+
+local ageInput = Instance.new("TextBox", petPage)
+ageInput.Size = UDim2.new(0, 100, 0, 30)
+ageInput.Position = UDim2.new(0, 170, 0, 70)
+ageInput.PlaceholderText = "Age"
+ageInput.Text = ""
+ageInput.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+ageInput.TextColor3 = Color3.new(1, 1, 1)
+
+local petSpawnBtn = createButton("Spawn Pet", UDim2.new(0, 200, 0, 40), UDim2.new(0, 60, 0, 130), petPage)
+
+-- === Seed Page ===
+local seedPage = createFrame("SeedPage", UDim2.new(0, 320, 0, 150), UDim2.new(0.5, -160, 0.5, -75), ScreenGui)
+seedPage.Visible = false
+
+local getSeed = createDropdown(seedList, seedPage, UDim2.new(0, 60, 0, 20))
+local seedSpawnBtn = createButton("Spawn Seed", UDim2.new(0, 200, 0, 40), UDim2.new(0, 60, 0, 80), seedPage)
+
+-- === Egg Page ===
+local eggPage = createFrame("EggPage", UDim2.new(0, 320, 0, 150), UDim2.new(0.5, -160, 0.5, -75), ScreenGui)
+eggPage.Visible = false
+
+local getEgg = createDropdown({"Night Egg", "Day Egg", "Sunshine Egg"}, eggPage, UDim2.new(0, 60, 0, 20))
+local eggSpawnBtn = createButton("Spawn Egg", UDim2.new(0, 200, 0, 40), UDim2.new(0, 60, 0, 80), eggPage)
+
+-- Navigation Buttons
+petBtn.MouseButton1Click:Connect(function()
+	hideAllPages()
+	petPage.Visible = true
+end)
+
+seedBtn.MouseButton1Click:Connect(function()
+	hideAllPages()
+	seedPage.Visible = true
+end)
+
+eggBtn.MouseButton1Click:Connect(function()
+	hideAllPages()
+	eggPage.Visible = true
+end)
+
+-- Action Buttons
+petSpawnBtn.MouseButton1Click:Connect(function()
+	local name = getPet()
+	local kg = tonumber(kgInput.Text)
+	local age = tonumber(ageInput.Text)
+	if name and kg and age then
+		Spawner.SpawnPet(name, kg, age)
+	end
+end)
+
+seedSpawnBtn.MouseButton1Click:Connect(function()
+	local seed = getSeed()
+	if seed and seed ~= "" then
+		Spawner.SpawnSeed(seed)
+	end
+end)
+
+eggSpawnBtn.MouseButton1Click:Connect(function()
+	local egg = getEgg()
+	if egg and egg ~= "" then
+		Spawner.SpawnEgg(egg)
+	end
+end)
